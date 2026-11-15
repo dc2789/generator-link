@@ -55,93 +55,95 @@ Merupakan suatu kehormatan bagi kami apabila Anda berkenan hadir. Terima kasih.<
   <div id="hasilContainer"></div>
 
   <script>
-    // Otomatis mendeteksi URL folder saat ini sebagai default
     window.onload = function() {
-      const currentUrl = window.location.href;
-      const baseFolder = currentUrl.substring(0, currentUrl.lastIndexOf('/') + 1);
+      var currentUrl = window.location.href;
+      var baseFolder = currentUrl.substring(0, currentUrl.lastIndexOf('/') + 1);
       document.getElementById('baseUrl').value = baseFolder;
     };
 
     function generateLinks() {
-      let baseUrl = document.getElementById('baseUrl').value.trim();
-      const rawNames = document.getElementById('daftarNama').value;
-      const template = document.getElementById('templatePesan').value;
-      const container = document.getElementById('hasilContainer');
+      var baseUrl = document.getElementById('baseUrl').value.trim();
+      var rawNames = document.getElementById('daftarNama').value;
+      var template = document.getElementById('templatePesan').value;
+      var container = document.getElementById('hasilContainer');
 
       if (!baseUrl) {
         alert('Silakan masukkan Link Utama Undangan terlebih dahulu.');
         return;
       }
 
-      // Memisahkan baris dan menghapus baris kosong
-      const names = rawNames.split('\n').map(n => n.trim()).filter(n => n !== '');
+      var names = rawNames.split('\n').map(function(n) { return n.trim(); }).filter(function(n) { return n !== ''; });
 
       if (names.length === 0) {
         alert('Masukkan minimal satu nama tamu.');
         return;
       }
 
-      container.innerHTML = ''; // Bersihkan hasil sebelumnya
+      container.innerHTML = '';
 
-      names.forEach((nama) => {
-        // Encode nama agar aman di URL (spasi, simbol &, koma, dll otomatis dikonversi)
-        const encodedNama = encodeURIComponent(nama);
-        const separator = baseUrl.includes('?') ? '&' : '?';
-        const fullLink = `${baseUrl}${separator}to=${encodedNama}`;
+      names.forEach(function(nama) {
+        var encodedNama = encodeURIComponent(nama);
+        var separator = baseUrl.indexOf('?') !== -1 ? '&' : '?';
+        var fullLink = baseUrl + separator + 'to=' + encodedNama;
 
-        // Menyusun pesan WhatsApp
-        const pesanFinal = template
+        var pesanFinal = template
           .replace(/\[NAMA\]/g, nama)
           .replace(/\[LINK\]/g, fullLink);
 
-        // URL WhatsApp yang sudah diperbaiki
-        const waUrl = `https://whatsapp.com{encodeURIComponent(pesanFinal)}`;
-
-        // Membuat elemen kartu untuk setiap tamu
-        const itemDiv = document.createElement('div');
+        // Membuat elemen kartu secara aman tanpa raw HTML string
+        var itemDiv = document.createElement('div');
         itemDiv.className = 'item-tamu';
-        itemDiv.innerHTML = `
-          <div class="item-header">
-            <span class="nama-badge">${escapeHtml(nama)}</span>
-          </div>
-          <div class="link-preview">${escapeHtml(fullLink)}</div>
-          <div class="btn-group">
-            <button class="btn-sm btn-copy" onclick="copyText(this, '${escapeAttr(fullLink)}')">Salin Link</button>
-            <button class="btn-sm btn-copy" onclick="copyText(this, '${escapeAttr(pesanFinal)}')">Salin Teks WA</button>
-            <button class="btn-sm btn-wa" onclick="window.open('${waUrl}', '_blank')">Kirim ke WA</button>
-          </div>
-        `;
+
+        var headerDiv = document.createElement('div');
+        headerDiv.className = 'item-header';
+        var namaSpan = document.createElement('span');
+        namaSpan.className = 'nama-badge';
+        namaSpan.textContent = nama;
+        headerDiv.appendChild(namaSpan);
+
+        var linkDiv = document.createElement('div');
+        linkDiv.className = 'link-preview';
+        linkDiv.textContent = fullLink;
+
+        var btnGroup = document.createElement('div');
+        btnGroup.className = 'btn-group';
+
+        var btnCopyLink = document.createElement('button');
+        btnCopyLink.className = 'btn-sm btn-copy';
+        btnCopyLink.textContent = 'Salin Link';
+        btnCopyLink.onclick = function() { copyText(btnCopyLink, fullLink); };
+
+        var btnCopyWa = document.createElement('button');
+        btnCopyWa.className = 'btn-sm btn-copy';
+        btnCopyWa.textContent = 'Salin Teks WA';
+        btnCopyWa.onclick = function() { copyText(btnCopyWa, pesanFinal); };
+
+        var btnSendWa = document.createElement('button');
+        btnSendWa.className = 'btn-sm btn-wa';
+        btnSendWa.textContent = 'Kirim ke WA';
+        btnSendWa.onclick = function() {
+          var waUrl = 'https://whatsapp.com' + encodeURIComponent(pesanFinal);
+          window.open(waUrl, '_blank');
+        };
+
+        btnGroup.appendChild(btnCopyLink);
+        btnGroup.appendChild(btnCopyWa);
+        btnGroup.appendChild(btnSendWa);
+
+        itemDiv.appendChild(headerDiv);
+        itemDiv.appendChild(linkDiv);
+        itemDiv.appendChild(btnGroup);
+
         container.appendChild(itemDiv);
       });
     }
 
     function copyText(btn, text) {
-      // Decode kembali karakter khusus sebelum disalin ke clipboard
-      const decodedText = text
-        .replace(/&#039;/g, "'")
-        .replace(/&quot;/g, '"')
-        .replace(/&amp;/g, '&')
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>');
-        
-      navigator.clipboard.writeText(decodedText).then(() => {
-        const originalText = btn.textContent;
+      navigator.clipboard.writeText(text).then(function() {
+        var originalText = btn.textContent;
         btn.textContent = 'Tersalin!';
-        setTimeout(() => btn.textContent = originalText, 1500);
+        setTimeout(function() { btn.textContent = originalText; }, 1500);
       });
-    }
-
-    function escapeHtml(str) {
-      return str
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-    }
-
-    function escapeAttr(str) {
-      return escapeHtml(str).replace(/\n/g, '\\n');
     }
   </script>
 

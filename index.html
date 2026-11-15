@@ -122,7 +122,7 @@ Merupakan suatu kehormatan bagi kami apabila Anda berkenan hadir. Terima kasih.<
         btnSendWa.className = 'btn-sm btn-wa';
         btnSendWa.textContent = 'Kirim ke WA';
         btnSendWa.onclick = function() {
-          var waUrl = 'https://whatsapp.com/send?text=' + encodeURIComponent(pesanFinal);
+          var waUrl = 'https://api.whatsapp.com/send?text=' + encodeURIComponent(pesanFinal);
           window.open(waUrl, '_blank');
         };
 

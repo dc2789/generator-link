@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generator Link Undangan</title>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; max-width: 720px; margin: 30px auto; padding: 0 20px; background: #f8f9fa; color: #333; }
+    .card { background: #fff; padding: 24px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px; }
+    h2 { margin-top: 0; color: #1a1a1a; }
+    label { display: block; font-weight: 600; margin-bottom: 6px; margin-top: 14px; }
+    input[type="text"], textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; font-family: inherit; }
+    small { color: #666; display: block; margin-top: 4px; }
+    button { background: #2563eb; color: #fff; border: none; padding: 12px 20px; border-radius: 6px; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 16px; width: 100%; }
+    button:hover { background: #1d4ed8; }
+    .item-tamu { background: #fff; padding: 16px; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 12px; display: flex; flex-direction: column; gap: 10px; }
+    .item-header { display: flex; justify-content: space-between; align-items: center; }
+    .nama-badge { font-weight: 700; font-size: 16px; color: #111; }
+    .link-preview { font-size: 13px; color: #2563eb; word-break: break-all; background: #eff6ff; padding: 8px; border-radius: 4px; }
+    .btn-group { display: flex; gap: 8px; }
+    .btn-sm { padding: 8px 12px; font-size: 13px; margin-top: 0; width: auto; flex: 1; }
+    .btn-copy { background: #4b5563; }
+    .btn-copy:hover { background: #374151; }
+    .btn-wa { background: #16a34a; }
+    .btn-wa:hover { background: #15803d; }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h2>Generator Link Undangan</h2>
+    
+    <label for="baseUrl">1. Link Utama Undangan Kamu</label>
+    <input type="text" id="baseUrl" placeholder="https://github.io">
+    <small>Pastikan diakhiri dengan tanda garis miring ( / ) atau nama file (misal: index.html)</small>
+
+    <label for="daftarNama">2. Daftar Nama Tamu (Pisahkan dengan baris baru / Enter)</label>
+    <textarea id="daftarNama" rows="6" placeholder="Budi Santoso&#10;Rian & Dina&#10;Keluarga Besar Bpk. Ahmad"></textarea>
+
+    <label for="templatePesan">3. Template Pesan WhatsApp</label>
+    <textarea id="templatePesan" rows="6">Kepada Yth.
+Bapak/Ibu/Saudara/i *[NAMA]*
+
+Tanpa mengurangi rasa hormat, perkenankan kami mengundang Anda untuk hadir di acara kami.
+
+Info lengkap & lokasi acara dapat diakses melalui tautan berikut:
+[LINK]
+
+Merupakan suatu kehormatan bagi kami apabila Anda berkenan hadir. Terima kasih.</textarea>
+    <small>Gunakan kode <b>[NAMA]</b> dan <b>[LINK]</b> untuk penempatan otomatis.</small>
+
+    <button onclick="generateLinks()">Buat Daftar Link</button>
+  </div>
+
+  <div id="hasilContainer"></div>
+
+  <script>
+    // Otomatis mendeteksi URL folder saat ini sebagai default
+    window.onload = function() {
+      const currentUrl = window.location.href;
+      const baseFolder = currentUrl.substring(0, currentUrl.lastIndexOf('/') + 1);
+      document.getElementById('baseUrl').value = baseFolder;
+    };
+
+    function generateLinks() {
+      let baseUrl = document.getElementById('baseUrl').value.trim();
+      const rawNames = document.getElementById('daftarNama').value;
+      const template = document.getElementById('templatePesan').value;
+      const container = document.getElementById('hasilContainer');
+
+      if (!baseUrl) {
+        alert('Silakan masukkan Link Utama Undangan terlebih dahulu.');
+        return;
+      }
+
+      // Memisahkan baris dan menghapus baris kosong
+      const names = rawNames.split('\n').map(n => n.trim()).filter(n => n !== '');
+
+      if (names.length === 0) {
+        alert('Masukkan minimal satu nama tamu.');
+        return;
+      }
+
+      container.innerHTML = ''; // Bersihkan hasil sebelumnya
+
+      names.forEach((nama) => {
+        // Encode nama agar aman di URL (spasi, simbol &, koma, dll otomatis dikonversi)
+        const encodedNama = encodeURIComponent(nama);
+        const separator = baseUrl.includes('?') ? '&' : '?';
+        const fullLink = `${baseUrl}${separator}to=${encodedNama}`;
+
+        // Menyusun pesan WhatsApp
+        const pesanFinal = template
+          .replace(/\[NAMA\]/g, nama)
+          .replace(/\[LINK\]/g, fullLink);
+
+        const waUrl = `https://whatsapp.com{encodeURIComponent(pesanFinal)}`;
+
+        // Membuat elemen kartu untuk setiap tamu
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'item-tamu';
+        itemDiv.innerHTML = `
+          <div class="item-header">
+            <span class="nama-badge">${escapeHtml(nama)}</span>
+          </div>
+          <div class="link-preview">${escapeHtml(fullLink)}</div>
+          <div class="btn-group">
+            <button class="btn-sm btn-copy" onclick="copyText(this, '${escapeAttr(fullLink)}')">Salin Link</button>
+            <button class="btn-sm btn-copy" onclick="copyText(this, '${escapeAttr(pesanFinal)}')">Salin Teks WA</button>
+            <button class="btn-sm btn-wa" onclick="window.open('${waUrl}', '_blank')">Kirim ke WA</button>
+          </div>
+        `;
+        container.appendChild(itemDiv);
+      });
+    }
+
+    function copyText(btn, text) {
+      // Decode kembali karakter khusus sebelum disalin ke clipboard
+      const decodedText = text.replace(/&#039;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+      navigator.clipboard.writeText(decodedText).then(() => {
+        const originalText = btn.textContent;
+        btn.textContent = 'Tersalin!';
+        setTimeout(() => btn.textContent = originalText, 1500);
+      });
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+
+    function escapeAttr(str) {
+      return escapeHtml(str).replace(/\n/g, '\\n');
+    }
+  </script>
+
+</body>
+</html>

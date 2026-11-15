@@ -58,7 +58,7 @@ Merupakan suatu kehormatan bagi kami apabila Anda berkenan hadir. Terima kasih.<
     window.onload = function() {
       var currentUrl = window.location.href;
       var baseFolder = currentUrl.substring(0, currentUrl.lastIndexOf('/') + 1);
-      document.getElementById('baseUrl').value = "https://dc2789.github.io/wedding-ivana-rudy/":
+      document.getElementById('baseUrl').value = "https://dc2789.github.io/wedding-ivana-rudy/";
     };
 
     function generateLinks() {
@@ -122,13 +122,13 @@ Merupakan suatu kehormatan bagi kami apabila Anda berkenan hadir. Terima kasih.<
         btnSendWa.className = 'btn-sm btn-wa';
         btnSendWa.textContent = 'Kirim ke WA';
         btnSendWa.onclick = function() {
-          var waUrl = 'https://whatsapp.com' + encodeURIComponent(pesanFinal);
+          var waUrl = 'https://whatsapp.com/send?text=' + encodeURIComponent(pesanFinal);
           window.open(waUrl, '_blank');
         };
 
         btnGroup.appendChild(btnCopyLink);
         btnGroup.appendChild(btnCopyWa);
-        //btnGroup.appendChild(btnSendWa);
+        btnGroup.appendChild(btnSendWa);
 
         itemDiv.appendChild(headerDiv);
         itemDiv.appendChild(linkDiv);
